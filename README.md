@@ -33,7 +33,7 @@ This tool is entirely client-side. No data is sent to any server. No analytics o
 
 ### Installation
 ```bash
-git clone https://github.com/your-username/img-converter-v.git
+git clone https://github.com/jmbstudio-dev/Image-converter-canvas.git
 cd img-converter-v
 npm install
 ```
