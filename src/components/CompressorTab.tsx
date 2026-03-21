@@ -111,7 +111,7 @@ export const CompressorTab = () => {
       <button
         onClick={compress}
         disabled={files.length === 0 || compressing}
-        className="w-full py-2 rounded-md bg-primary text-background hover:opacity-90 disabled:opacity-50 transition"
+        className="w-full py-2 rounded-md bg-primary text-background mt-auto hover:opacity-90 disabled:opacity-50 transition"
       >
         {compressing ? "Compressing..." : "Compress Images"}
       </button>
