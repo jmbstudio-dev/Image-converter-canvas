@@ -1,5 +1,5 @@
 # 🖼️ Image Tools
-VIEW LIVE: https://image-tools-mu.vercel.app/
+VIEW LIVE: https://image-tools.vercel.app/
 
 A fast, private, client-side image toolkit built with React + Vite. No login, no uploads, no server — everything runs directly in your browser.
 
