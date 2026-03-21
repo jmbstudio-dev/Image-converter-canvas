@@ -1,5 +1,5 @@
 # 🖼️ Image Tools
-VIEW LIVE: https://image-tools.vercel.app/
+VIEW LIVE: https://jmb-image-tools.vercel.app/
 
 A fast, private, client-side image toolkit built with React + Vite. No login, no uploads, no server — everything runs directly in your browser.
 
@@ -65,7 +65,7 @@ This tool is entirely client-side. No data is sent to any server. No analytics o
 
 ### Installation
 ```bash
-git clone https://github.com/jmbstudio-dev/Image-Tools.git
+git clone https://github.com/jmbstudio-dev/JMB-Image-Tools.git
 cd Image-Tools
 npm install
 ```
