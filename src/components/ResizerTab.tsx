@@ -1,9 +1,8 @@
 import { useState, useRef } from "react";
 import { saveAs } from "file-saver";
 import JSZip from "jszip";
-import { Lock, Unlock } from "lucide-react";
-import { PreviewGrid } from "./PreviewGrid";
-
+import { Lock, Unlock, Download } from "lucide-react";
+import { formatBytes } from "../utils/formatBytes";
 
 type ResizeMode = "px" | "percent";
 type BatchMode = "same" | "individual";
@@ -65,12 +64,15 @@ export const ResizerTab = () => {
   const [outputSizes, setOutputSizes] = useState<number[]>([]);
   const [errors, setErrors] = useState<string[]>([]);
   const [perImage, setPerImage] = useState<PerImageSettings[]>([]);
+  const [outputBlobs, setOutputBlobs] = useState<(Blob | null)[]>([]);
+  const [zipMode, setZipMode] = useState(false);
 
   const initState = async (selected: File[]) => {
     setFiles(selected);
     setProgress(Array(selected.length).fill(0));
     setOutputSizes(Array(selected.length).fill(0));
     setErrors(Array(selected.length).fill(""));
+    setOutputBlobs(Array(selected.length).fill(null));
     const dims = await Promise.all(selected.map(getImageDimensions));
     setPerImage(dims.map((d) => ({ width: d.w, height: d.h, percent: 50 })));
   };
@@ -130,6 +132,7 @@ export const ResizerTab = () => {
     setOutputSizes(Array(files.length).fill(0));
     setErrors(Array(files.length).fill(""));
 
+    const blobs: (Blob | null)[] = Array(files.length).fill(null);
     const zip = new JSZip();
 
     await Promise.all(
@@ -156,13 +159,19 @@ export const ResizerTab = () => {
           }
 
           const blob = await resizeImage(file, targetW, targetH);
+          blobs[i] = blob;
 
           setOutputSizes((prev) => { const c = [...prev]; c[i] = blob.size; return c; });
           setProgress((prev) => { const c = [...prev]; c[i] = 90; return c; });
 
           const ext = file.name.split(".").pop();
           const newName = file.name.replace(/\.[^/.]+$/, "") + `_${targetW}x${targetH}.${ext}`;
-          zip.file(newName, await blob.arrayBuffer());
+
+          if (zipMode) {
+            zip.file(newName, await blob.arrayBuffer());
+          } else {
+            saveAs(blob, newName);
+          }
 
           setProgress((prev) => { const c = [...prev]; c[i] = 100; return c; });
         } catch {
@@ -172,9 +181,36 @@ export const ResizerTab = () => {
       }),
     );
 
-    const zipBlob = await zip.generateAsync({ type: "blob" });
-    saveAs(zipBlob, "resized-images.zip");
+    setOutputBlobs(blobs);
+
+    if (zipMode) {
+      const zipBlob = await zip.generateAsync({ type: "blob" });
+      saveAs(zipBlob, "resized-images.zip");
+    }
+
     setResizing(false);
+  };
+
+  const downloadSingle = async (idx: number) => {
+    const blob = outputBlobs[idx];
+    if (!blob) return;
+    const file = files[idx];
+    const ext = file.name.split(".").pop();
+
+    let targetW = width;
+    let targetH = height;
+
+    if (mode === "percent") {
+      const p = batchMode === "individual" ? (perImage[idx]?.percent ?? percent) : percent;
+      const { w, h } = await getImageDimensions(file);
+      targetW = Math.round((w * p) / 100);
+      targetH = Math.round((h * p) / 100);
+    } else if (batchMode === "individual") {
+      targetW = perImage[idx]?.width ?? width;
+      targetH = perImage[idx]?.height ?? height;
+    }
+
+    saveAs(blob, file.name.replace(/\.[^/.]+$/, "") + `_${targetW}x${targetH}.${ext}`);
   };
 
   return (
@@ -348,6 +384,19 @@ export const ResizerTab = () => {
         </div>
       )}
 
+      {/* ZIP TOGGLE */}
+      <label className="flex items-center gap-3 cursor-pointer">
+        <input
+          type="checkbox"
+          checked={zipMode}
+          onChange={(e) => setZipMode(e.target.checked)}
+          className="accent-primary w-4 h-4"
+        />
+        <span className="text-sm text-muted-foreground">
+          Download as <span className="text-foreground">.zip</span>
+        </span>
+      </label>
+
       {/* BUTTON */}
       <button
         onClick={resizeAll}
@@ -361,12 +410,47 @@ export const ResizerTab = () => {
         {files.length} file(s) selected
       </p>
 
-      <PreviewGrid
-        files={files}
-        progress={progress}
-        errors={errors}
-        outputSizes={outputSizes}
-      />
+      {/* PREVIEW GRID WITH SAVE BUTTONS */}
+      <div className="grid grid-cols-3 gap-2">
+        {files.map((file, i) => (
+          <div key={i} className="space-y-1">
+            <div className="relative group">
+              <img
+                src={URL.createObjectURL(file)}
+                alt="preview"
+                className="w-full h-20 object-cover rounded-md"
+              />
+              {progress[i] === 100 && outputBlobs[i] && (
+                <button
+                  onClick={() => downloadSingle(i)}
+                  className="absolute inset-0 flex items-center justify-center bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity rounded-md"
+                >
+                  <Download className="w-5 h-5 text-white" />
+                </button>
+              )}
+            </div>
+            <div className="w-full bg-surface rounded-full h-2">
+              <div
+                className={`h-2 rounded-full transition-all duration-300 ${
+                  errors[i] ? "bg-red-500" : progress[i] === 100 ? "bg-green-500" : "bg-primary"
+                }`}
+                style={{ width: `${errors[i] ? 100 : progress[i] ?? 0}%` }}
+              />
+            </div>
+            <p className="text-xs text-center text-muted-foreground">
+              {errors[i] ? (
+                <span className="text-red-500">Failed</span>
+              ) : progress[i] === 100 && outputSizes[i] ? (
+                <span className="text-green-500">
+                  {formatBytes(file.size)} → {formatBytes(outputSizes[i])}
+                </span>
+              ) : (
+                `${progress[i] ?? 0}%`
+              )}
+            </p>
+          </div>
+        ))}
+      </div>
     </div>
   );
 };
