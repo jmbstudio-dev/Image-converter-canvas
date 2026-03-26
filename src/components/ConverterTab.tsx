@@ -2,7 +2,6 @@ import { useState, useRef } from "react";
 import { saveAs } from "file-saver";
 import JSZip from "jszip";
 import { Download } from "lucide-react";
-// import { PreviewGrid } from "./PreviewGrid";
 import { formatBytes } from "../utils/formatBytes";
 
 const FORMATS = [

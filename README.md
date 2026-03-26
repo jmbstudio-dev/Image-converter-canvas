@@ -51,7 +51,7 @@ This tool is entirely client-side. No data is sent to any server. No analytics o
 - **AVIF** is supported on Chrome/Edge but may fail on Firefox or Safari — use WebP for broader compatibility
 - Very large images (16,000×16,000px+) may fail silently due to browser canvas memory limits
 - Compression target size is a best-effort — exact output size may vary slightly
-- HEIC/HEIF (iPhone photos) are not currently supported as input
+- HEIC/HEIF (iPhone photos) are not currently supported as input [will work on this]
 - Compression time varies by file size and device — large files on mobile may take longer
 - Cropper works on one image at a time
 
