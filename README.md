@@ -66,7 +66,7 @@ This tool is entirely client-side. No data is sent to any server. No analytics o
 ### Installation
 ```bash
 git clone https://github.com/jmbstudio-dev/JMB-Image-Tools.git
-cd Image-Tools
+cd JMB-Image-Tools-main
 npm install
 ```
 
